@@ -1,0 +1,46 @@
+.p {
+    backdrop-filter: blur(10px)
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+}
+
+input {
+    margin-bottom: 6px;
+}
+
+.box {
+    background-color: rgba(255, 255, 255, 0.13);
+    border-radius: 5px;
+    font-family: sans-serif;
+    text-align: center;
+    line-height: 1;
+   -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    max-width: 50%;
+    max-height: 50%;
+    padding: 20px 40px;
+  }
+  
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  body {
+    background-image: url(./images/loginBackground.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  
+  .container {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    width: 10}

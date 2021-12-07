@@ -1,0 +1,130 @@
+body {
+  color : black;
+  text-align: center;
+  border:none;
+  outline:none;
+  background-image: url(https://cdn.discordapp.com/attachments/777653235359416330/815950682027851787/SPOILER_2021-02-28_23.16.22.png);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+h1 {
+  color : white;
+  background-color: #111;
+}
+p {
+  color : black;
+  text-align: center;
+}
+input[type="submit"], input[type="number"] {
+    border:none;
+    outline:none;
+}
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+th{
+  border: 1px solid black;
+  border-collapse: collapse;
+  font:bold;
+  font-size: large;
+}
+table, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  color: white;
+}
+#itemSearch {
+  background-image: url('/css/searchicon.png'); /* Add a search icon to input */
+  background-position: 10px 12px; /* Position the search icon */
+  background-repeat: no-repeat; /* Do not repeat the icon image */
+  width: 100%; /* Full-width */
+  font-size: 16px; /* Increase font-size */
+  padding: 12px 20px 12px 40px; /* Add some padding */
+  border: 1px solid #ddd; /* Add a grey border */
+  margin-bottom: 12px; /* Add some space below the input */
+}    
+.sidepanel  {
+  width: 100%;
+  position: fixed;
+  z-index: 1;
+  height: 0px;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 0px;
+}
+.sidepanel a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.5s;
+}
+.sidepanel a:hover {
+  color: #f1f1f1;
+}
+.sidepanel .closebtn {
+  position: absolute;
+  text-align: center;
+  right:49%;
+  color:red;
+  font-size: 48px;
+}
+.openbtn {
+  text-align: center;
+  font-size: 20px;
+  cursor: pointer;
+  background-color: #111;
+  color: white;
+  border: none;
+}
+.openbtn:hover {
+  background-color:#444;
+}
+#main {
+  transition: 0.5s; /* If you want a transition effect */
+  padding: 0px;
+}
+.testP {
+  color : whitesmoke;
+  text-align: center;
+  font-size: large;
+  padding-left: 30%;
+  padding-right: 30%;
+}
+.rowEven{
+  background-color: grey;
+}
+.rowOdd{
+  background-color: lightgray;
+}
+/*
+.itemTr:nth-child(even) {background: lightgray}
+.itemTr:nth-child(odd) {background: grey}*/
+.cpuTable{
+  border: 1px solid grey;
+  border-collapse: collapse;
+  background-color:slategrey;
+  color:whitesmoke;
+  text-align: center;
+}
+.networkMessage{
+  color:red;
+  font-size: xx-large;
+}
+.adminMessage{
+  color:yellow;
+  font-size: large;
+}
+.powerbtn {
+  right:49%;
+  color:white;
+  font-size: 12px;
+}

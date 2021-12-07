@@ -1,0 +1,194 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <title>MAEN</title>
+  <link rel="stylesheet" type="text/css" href="static/styleBase.css">
+  <script src="script.js"></script>
+</head>
+<body>
+<div id ="main">
+    <div id="mySidepanel" class="sidepanel">
+      {%if energy %}
+      <p class ="testP"style="text-align:left;">Currently Stored Power :<span style="float:right;">
+        Average Energy Used : 
+      </span></p>
+      <p class ="testP" style="text-align:left;"><span id="energyStored">{{energy[2]/2}} Eu</span><span id="energyTick" style="float:right;">
+        {{energy[0]/2}} Eu/t
+      </span></p>
+      <p class ="testP"style="text-align:left;">Maximum Stored Power :<span style="float:right;">
+        Remaining Energy :
+      </span></p>
+      <p class ="testP"style="text-align:left;"><span id="energyStoredMax">{{energy[1]/2}} Eu</span><span style="float:right;">
+        {{energy[3]}}%
+      </span></p>
+      <p><a id="rfToEu" href="javascript:void(0)" class="powerbtn" value="EU" onclick="switchEnergyDisplay()">Switch Power Unit</a></p>
+
+
+      {%endif%}
+      {%if cpus|count > 1 %}
+      <table class = "cpuTable" id="CpusList" style="width:50%;margin-left: auto;margin-right: auto;" >
+        <th>Cpu Name</th>
+        <th>Processing Power</th>
+        <th>Coprocessors</th>
+        <th>State</th>
+        {%for i in range (0,cpus|count -1,4)%}
+              <tr>
+                  <td>
+                    {% if cpus[i] == "" %}
+                      Unnamed
+                    {%else%}
+                      {{cpus[i]}}
+                    {%endif%}
+                  </td>
+                  <td>
+                    {{cpus[i+1]}}
+                  </td>
+                  <td>
+                    {{cpus[i+2]}}
+                  </td>
+                  <td>
+                    {% if cpus[i+3] == "true" %}
+                        Working
+                    {%else%}
+                        Idle
+                    {%endif%}
+                  </td>
+              </tr>
+        {%endfor%}
+      </table>
+    {%endif%}
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+    </div>
+    <button class="openbtn" onclick="openNav()">▼Network status</button> 
+    {%if networkMessage %}
+      <h2 class = "networkMessage"> {{networkMessage}}</h2>
+    {%endif%}
+    {%if adminMessage %}
+      <h3 class = "adminMessage"> {{adminMessage}}</h3>
+    {%endif%}
+  <table style="width:100%;margin-left: auto;margin-right: auto; " >
+    <th> <h1>Network Items</h1> </th>
+    <th><h1>Crafting Request</h1></th>
+    <tr>
+  <td style="width:65%;margin-left: auto;margin-right: auto;" >
+  {%if aeItems %}
+
+  <input type="text" id="itemSearch" onkeyup="myFunction()" placeholder="Search for item" style="width: 65%;direction: ltr;">
+
+      <table id="itemList" style="width:100%" >
+          <th>Item Name</th>
+          <th>Item Count</th>
+          <th>Is Craftable</th>
+          {%for i in range (0,aeItems|count,3)%}
+              <tr class = "itemTr">
+                      <td style="text-align: left;">
+                          {{aeItems[i]}}
+                      </td>
+                  <td style="text-align: left;">{{aeItems[i+1]}}</td>
+                  <td>
+                    {% if aeItems[i+2] == "true"%}
+                    <form action="craftingRequest">
+                      <input type="number" name="number" placeholder="Request x amount" min="1" max="999999999"/>
+                      <input type="hidden" name="itemName" value="{{aeItems[i]}}" />
+                      <input type="submit" value="Request" />
+                    </form>
+                  </td>
+                  {%endif%}
+              </tr>
+              
+          {%endfor%}
+      </table>
+
+
+  {%endif%}
+  </td>
+  <td style="width:35%;margin-left: auto;margin-right: auto;vertical-align: baseline;">
+  {%if craftingStatusData %}
+    
+  <table id="CraftingRequest" style="width:100%;" >
+    <th>Item Name</th>
+    <th>Item Count</th>
+    <th>Status <br> (Canceled = Missing resources OR Cpus already occupied OR too complex for current Cpus</br></th>
+    {%for i in range (craftingStatusData|count)%}
+        <tr>
+            <td style="text-align: left;">
+              {{craftingStatusData[i][0]}}
+            </td>
+            <td style="text-align: left;">
+              {{craftingStatusData[i][1]}}
+            </td>
+            <td>
+              {{craftingStatusData[i][2]}}
+            </td>
+        </tr>
+
+        
+    {%endfor%}
+  </table>
+
+  {%endif%}
+  </td>
+
+  </tr>
+</table>
+</div>
+<script>
+    function myFunction() {
+      var input, filter, table, tr, td, i, txtValue;
+      input = document.getElementById("itemSearch");
+      filter = input.value.toUpperCase();
+      table = document.getElementById("itemList");
+      tr = table.getElementsByTagName("tr");
+      counterEvenOdd = 0
+
+      for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+          txtValue = td.textContent || td.innerText;
+          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            tr[i].style.display = "";
+            // if (counterEvenOdd % 2 == 0){
+            //   tr[i].className = "rowOdd"
+            // }else{
+            //   tr[i].className = "rowEven"
+            // }
+            counterEvenOdd = counterEvenOdd +1
+          } else {
+            tr[i].style.display = "none";
+          }
+        }
+      }
+    }
+
+  function openNav() {
+    document.getElementById("mySidepanel").style.height = "350px";
+    document.getElementById("main").style.marginTop = "350px";
+  }
+
+  function closeNav() {
+    document.getElementById("mySidepanel").style.height = "0px";
+    document.getElementById("main").style.marginTop = "0px";
+  }
+
+  function switchEnergyDisplay() {
+    var btn = document.getElementById('rfToEu');
+    var txtTick = document.getElementById('energyTick');
+    var txtStored = document.getElementById('energyStored');
+    var txtStoredMax = document.getElementById('energyStoredMax');
+    if (btn.value === 'EU') {
+      btn.value = 'RF';
+      txtTick.textContent = '{{(energy[0]/2)}} EU/t';
+      txtStored.textContent = '{{energy[2]/2}} EU';
+      txtStoredMax.textContent = '{{energy[1]/2}} EU';
+    } else {
+      btn.value = 'EU';
+      txtTick.textContent = '{{(energy[0]/2)* 4}} RF/t';
+      txtStored.textContent = '{{(energy[2]/2)* 4}} RF';
+      txtStoredMax.textContent = '{{(energy[1]/2)* 4}} RF';
+    }
+  }
+
+</script>
+
+</body>
+</html>
