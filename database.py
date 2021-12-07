@@ -3,7 +3,8 @@ import psycopg2
 import psycopg2.extras
 import io
 
-inputFile = "C:/Programmation/AEOC/GtDictionnaryString.py"
+#put the path to the GtDictionnaryString.py here
+inputFile = "XXXXXXXXXX"
 
 def connectDatabase():
     
