@@ -5,49 +5,49 @@
   <link rel="stylesheet" type="text/css" href="static/styleBase.css">
   <script src="script.js"></script>
 </head>
-<body onload="sortTable(1)">
+<body>
 <div id ="main">
     <div id="mySidepanel" class="sidepanel">
       {%if energy %}
       <p class ="testP"style="text-align:left;">Currently Stored Power :<span style="float:right;">
         Average Energy Used : 
       </span></p>
-      <p class ="testP" style="text-align:left;"><span id="energyStored">{{energy["storedPower"]/2}} Eu</span><span id="energyTick" style="float:right;">
-        {{energy["avgPowerUsage"]/2}} Eu/t
+      <p class ="testP" style="text-align:left;"><span id="energyStored">{{energy[2]/2}} Eu</span><span id="energyTick" style="float:right;">
+        {{energy[0]/2}} Eu/t
       </span></p>
       <p class ="testP"style="text-align:left;">Maximum Stored Power :<span style="float:right;">
         Remaining Energy :
       </span></p>
-      <p class ="testP"style="text-align:left;"><span id="energyStoredMax">{{energy["maxStoredPower"]/2}} Eu</span><span style="float:right;">
-        0
+      <p class ="testP"style="text-align:left;"><span id="energyStoredMax">{{energy[1]/2}} Eu</span><span style="float:right;">
+        {{energy[3]}}%
       </span></p>
       <p><a id="rfToEu" href="javascript:void(0)" class="powerbtn" value="EU" onclick="switchEnergyDisplay()">Switch Power Unit</a></p>
 
 
       {%endif%}
-      {%if cpus%}
+      {%if cpus|count > 1 %}
       <table class = "cpuTable" id="CpusList" style="width:50%;margin-left: auto;margin-right: auto;" >
         <th>Cpu Name</th>
         <th>Processing Power</th>
         <th>Coprocessors</th>
         <th>State</th>
-        {%for i in range (0,cpus|count)%}
+        {%for i in range (0,cpus|count -1,4)%}
               <tr>
                   <td>
-                    {% if cpus[i]["name"] == "" %}
+                    {% if cpus[i] == "" %}
                       Unnamed
                     {%else%}
-                      {{cpus[i]["name"]}}
+                      {{cpus[i]}}
                     {%endif%}
                   </td>
                   <td>
-                    {{cpus[i]["storage"]}}
+                    {{cpus[i+1]}}
                   </td>
                   <td>
-                    {{cpus[i]["coprocessors"]}}
+                    {{cpus[i+2]}}
                   </td>
                   <td>
-                    {% if cpus[i]["busy"] == "true" %}
+                    {% if cpus[i+3] == "true" %}
                         Working
                     {%else%}
                         Idle
@@ -70,26 +70,26 @@
     <th> <h1>Network Items</h1> </th>
     <th><h1>Crafting Request</h1></th>
     <tr>
-  <td id="itemsTable" style="width:65%;margin-left: auto;margin-right: auto;" >
+  <td style="width:65%;margin-left: auto;margin-right: auto;" >
   {%if aeItems %}
 
   <input type="text" id="itemSearch" onkeyup="myFunction()" placeholder="Search for item" style="width: 65%;direction: ltr;">
 
       <table id="itemList" style="width:100%" >
-          <th onclick="sortTable(0)" class ="thsort">Item Name</th>
-          <th onclick="sortTable(1)" class ="thsort">Item Count</th>
-          <th onclick="sortTable(2)" class ="thsort">Is Craftable</th>
-          {%for key,value in aeItems.items() %}
+          <th>Item Name</th>
+          <th>Item Count</th>
+          <th>Is Craftable</th>
+          {%for i in range (0,aeItems|count,3)%}
               <tr class = "itemTr">
                       <td style="text-align: left;">
-                          {{key}}
+                          {{aeItems[i]}}
                       </td>
-                  <td style="text-align: left;">{{value["size"]}}</td>
+                  <td style="text-align: left;">{{aeItems[i+1]}}</td>
                   <td>
-                    {% if value["isCraftable"] == "true"%}
+                    {% if aeItems[i+2] == "true"%}
                     <form action="craftingRequest">
                       <input type="number" name="number" placeholder="Request x amount" min="1" max="999999999"/>
-                      <input type="hidden" name="itemName" value="{{key}}" />
+                      <input type="hidden" name="itemName" value="{{aeItems[i]}}" />
                       <input type="submit" value="Request" />
                     </form>
                   </td>
@@ -177,88 +177,17 @@
     var txtStoredMax = document.getElementById('energyStoredMax');
     if (btn.value === 'EU') {
       btn.value = 'RF';
-      txtTick.textContent = '{{(energy["avgPowerUsage"]/2)}} EU/t';
-      txtStored.textContent = '{{energy["storedPower"]/2}} EU';
-      txtStoredMax.textContent = '{{energy["maxStoredPower"]/2}} EU';
+      txtTick.textContent = '{{(energy[0]/2)}} EU/t';
+      txtStored.textContent = '{{energy[2]/2}} EU';
+      txtStoredMax.textContent = '{{energy[1]/2}} EU';
     } else {
       btn.value = 'EU';
-      txtTick.textContent = '{{(energy["avgPowerUsage"]/2)* 4}} RF/t';
-      txtStored.textContent = '{{(energy["storedPower"]/2)* 4}} RF';
-      txtStoredMax.textContent = '{{(energy["maxStoredPower"]/2)* 4}} RF';
+      txtTick.textContent = '{{(energy[0]/2)* 4}} RF/t';
+      txtStored.textContent = '{{(energy[2]/2)* 4}} RF';
+      txtStoredMax.textContent = '{{(energy[1]/2)* 4}} RF';
     }
   }
 
-  function sortTable(n) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-    table = document.getElementById("itemList");
-    switching = true;
-    // Set the sorting direction to ascending:
-    dir = "desc";
-    /* Make a loop that will continue until
-    no switching has been done: */
-    while (switching) {
-      // Start by saying: no switching is done:
-      switching = false;
-      rows = table.rows;
-      /* Loop through all table rows (except the
-      first, which contains table headers): */
-      for (i = 1; i < (rows.length - 1); i++) {
-        // Start by saying there should be no switching:
-        shouldSwitch = false;
-        /* Get the two elements you want to compare,
-        one from current row and one from the next: */
-        x = rows[i].getElementsByTagName("TD")[n];
-        y = rows[i + 1].getElementsByTagName("TD")[n];
-        /* Check if the two rows should switch place,
-        based on the direction, asc or desc: */
-        if (dir == "asc") {
-          if (n == 1) {
-            if (Number(x.innerHTML) > Number(y.innerHTML)) {
-            // If so, mark as a switch and break the loop:
-            shouldSwitch = true;
-            break;
-            }
-          }else{
-            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-            // If so, mark as a switch and break the loop:
-            shouldSwitch = true;
-            break;
-            }
-          }
-          
-        } else if (dir == "desc") {
-          if (n == 1) {
-            if (Number(x.innerHTML) < Number(y.innerHTML)) {
-            // If so, mark as a switch and break the loop:
-            shouldSwitch = true;
-            break;
-            }
-          }else{
-            if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-            // If so, mark as a switch and break the loop:
-            shouldSwitch = true;
-            break;
-            }
-          }
-        }
-      }
-      if (shouldSwitch) {
-        /* If a switch has been marked, make the switch
-        and mark that a switch has been done: */
-        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-        switching = true;
-        // Each time a switch is done, increase this count by 1:
-        switchcount ++;
-      } else {
-        /* If no switching has been done AND the direction is "asc",
-        set the direction to "desc" and run the while loop again. */
-        if (switchcount == 0 && dir == "desc") {
-          dir = "asc";
-          switching = true;
-        }
-      }
-    }
-  }
 </script>
 
 </body>

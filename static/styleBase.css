@@ -128,10 +128,3 @@ table, td {
   color:white;
   font-size: 12px;
 }
-.thsort{
-  border: 1px solid black;
-  border-collapse: collapse;
-  font:bold;
-  font-size: large;
-  cursor: pointer;
-}
