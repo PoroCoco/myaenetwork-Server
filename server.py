@@ -5,6 +5,7 @@ import time
 import database
 import math
 import base64
+import json
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -13,7 +14,7 @@ app.config['use_reloader'] = True
 app.config['SECRET_KEY'] = b'XXXX'
 
 remakeDBTranslation = False #takes a very long time
-luaProgramVersion = "0.13"
+luaProgramVersion = "1.0"
 firstCharTranslate = ["g","b","m","f"]
 remakeDB = False #true to erase and reset the database 
 translateGTName = True #Translate all the gregtech Item name into readable name (long computing time -> needs to be optimized)
@@ -25,7 +26,7 @@ message_computer_no_response = "Computer didn't send the data. Please retry. The
 
 secondBeforeTimeout = 6 #how many seconds to wait for a computer response
 sleepTimeWaitingUpdateNetwork = 0.5 #how many seconds between each query to see if it has been updated (network route)
-
+emptyCraftingRequestString = '{"itemNumber":"EMPTY", "itemName":"EMPTY"}'
 
 def is_number(s):
     try:
@@ -33,30 +34,6 @@ def is_number(s):
         return True
     except ValueError:
         return False
-
-#sort the array by descending order while keeping the array correct ie: ["item name", itemCount, "IsCraftable","item name2", itemCount2, "IsCraftable2"]
-def tri_insertion(tab): 
-  for y in range(1,len(tab),3):
-    max = -1
-    index = 0
-    for i in range(y,len(tab),3):
-        if type(tab[i]) != int :
-            if 0>max:
-                max = 0
-                index = i
-        elif tab[i] > max:
-            max = tab[i]
-            index = i
-    tmpCount= tab[y]
-    tmpName = tab[y-1]
-    tmpIsCraftable = tab[y+1]
-    tab[y] = tab[index]
-    tab[y-1] = tab[index-1]
-    tab[y+1] = tab[index+1]
-    tab[index] = tmpCount
-    tab[index-1] = tmpName
-    tab[index+1] = tmpIsCraftable
-
 
 #return the traducted string from gregtech if the string given is translatable. Uses the txt file made from the GTNamePruner.py
 def traductionGTName(string):
@@ -85,48 +62,12 @@ def craftingStatusDataToList(string):
     array.reverse()
     return array
 
-#take the string containing the info of the items inside the AE network and return a list out of them
-def StrItemToList(string):
-    liste = string.split(';')
-    b=[]
-    for i in liste:
-        b+=i.split("~")
-    return b
-
-def processItemData(itemData):
-    itemData = StrItemToList(itemData)
-    if translateGTName:
-        for i in range(0,len(itemData)-1,3):
-            itemData[i] = traductionGTName(itemData[i])
-    for i in range(len(itemData)):
-        if i%3 == 0 and replaceSpacebyUnderscore:
-            itemData[i] = itemData[i].replace(" ","_")
-        if is_number(itemData[i]):
-            itemData[i] = itemData[i].replace(".0","")
-            itemData[i] = int(itemData[i])
-    itemData.pop()
-    if sortDesc : tri_insertion(itemData)
-    return itemData
-    
-def getComputerId(itemData):
-    computer_id = ""
-    if len(itemData) != 0:
-        for i in range(1,9):
-            if itemData[-i] != ";":
-                computer_id = computer_id + itemData[-i]
-            else :
-                return computer_id[::-1]
-    return -1
-
-def clearIdFromData(itemData):
-    if len(itemData) != 0:
-        for i in range(1,9):
-            if itemData[-1] !=";":
-                itemData = itemData[:-1]
-            else:
-                itemData = itemData[:-1]
-                return itemData
-    return 
+def processItem(itemDataDict):
+    for item in itemDataDict :
+        if translateGTName:
+            translatedItem = traductionGTName(item)
+            itemDataDict[translatedItem] = itemDataDict.pop(item)
+    return itemDataDict
 
 def processCraftingStatusData(craftingStatus):
     if type(craftingStatus) == bytes:
@@ -135,20 +76,12 @@ def processCraftingStatusData(craftingStatus):
         craftingStatus = craftingStatusDataToList(craftingStatus)
     return craftingStatus
 
-def separateItemDataMiscInfo(itemData):
-    array = itemData.split("|")
-    return array[0], array[1], array[2]
 
 def processEnergy(energy):
-    array = energy.split(";")
-    array[0] = math.floor(float(array[0]))
-    array[1] = math.floor(float(array[1]))
-    array[2] = math.floor(float(array[2]))
-    if array[1] != 0 and array[2] != 0:
-        array.append(math.floor((array[2]/array[1])*100))
-    else :
-        array.append(0)
-    return array
+    energy["avgPowerUsage"] = float(energy["avgPowerUsage"])
+    energy["maxStoredPower"] = float(energy["maxStoredPower"])
+    energy["storedPower"] = float(energy["storedPower"])
+    return energy
 
 #return a list from the cpus data string. returned list  : [[cpuname,processing power,coprocessor,status],...]
 def processCpus(cpus):
@@ -234,18 +167,19 @@ def network():
     craftingStatusData = database.execute_command("SELECT craftingstatus FROM aedata WHERE id = %s",session["user_id"])[0][0]
     energy = database.execute_command("SELECT energy FROM aedata WHERE id = %s",session["user_id"])[0][0]
     cpus = database.execute_command("SELECT cpus FROM aedata WHERE id = %s",session["user_id"])[0][0]
-    startItemData = time.time()
-    itemData = processItemData(itemData)
-    endItemData = time.time()
-    print("item data took : " + str(endItemData-startItemData))
+    itemData = json.loads(itemData)
+    energy = json.loads(energy)
+    cpus = json.loads(cpus)
     energy = processEnergy(energy)
-    if energy[3] == 0:
+    craftingStatusData = json.loads(craftingStatusData)
+    itemData = processItem(itemData)
+    if energy["storedPower"] == 0:
         networkMessage = "Network is out of energy"
     return render_template("mainScreen.html",
                         aeItems = itemData, 
                         craftingStatusData = processCraftingStatusData(craftingStatusData),
                         energy = energy,
-                        cpus = processCpus(cpus),
+                        cpus = cpus,
                         networkMessage = networkMessage,
                         adminMessage = adminMessage)
 
@@ -253,17 +187,19 @@ def network():
 @app.route("/toPing", methods = ['POST'])
 def toPing():
     pingData = request.get_data()
+    pingData = base64.b64decode(pingData)
     pingData = pingData.decode('utf-8', 'ignore')
-    computer_id = getComputerId(pingData)
-    computer_version = clearIdFromData(pingData)
+    pingData = json.loads(pingData)
+    res = {}
+    computer_id = pingData["computer_id"]
+    computer_version = pingData["progVersion"]
     if computer_version != luaProgramVersion :
         return "Outdated"
-    res = database.execute_command("SELECT updaterequested FROM aedata WHERE id = %s",computer_id)[0][0]
-    craftingrequestString = database.execute_command("SELECT craftingrequeststring FROM aedata WHERE id = %s",computer_id)[0][0]
-    if craftingrequestString != 'EMPTY;EMPTY':
-        database.execute_command("UPDATE aedata SET craftingrequeststring='EMPTY;EMPTY' WHERE ID = %s",computer_id)
-    stringReturned = str(res) + ";" + craftingrequestString
-    return stringReturned
+    res["updateRequest"] = database.execute_command("SELECT updaterequested FROM aedata WHERE id = %s",computer_id)[0][0]
+    res["craftingRequest"] = database.execute_command("SELECT craftingrequeststring FROM aedata WHERE id = %s",computer_id)[0][0]
+    if res["craftingRequest"] != emptyCraftingRequestString:
+        database.execute_command_multiple_parameters("UPDATE aedata SET craftingrequeststring= %s WHERE ID = %s",(emptyCraftingRequestString, computer_id))
+    return json.dumps(res)
 
 #for computers to send the data about the stored item, the energy levels and Cpus state in the network
 @app.route("/inputItemData", methods = ['POST'])
@@ -271,12 +207,14 @@ def inputItemData():
     itemData = request.get_data()
     itemData = base64.b64decode(itemData)
     itemData = itemData.decode('utf-8', 'ignore')
-    computer_id = getComputerId(itemData)
+    itemData = json.loads(itemData)
+    computer_id = itemData["computer_id"]
     if computer_id == -1:
         print("!!!! : computer_id = -1 ")
-    itemData = clearIdFromData(itemData)
-    itemData, energy, cpus = separateItemDataMiscInfo(itemData)
-    database.execute_command_multiple_parameters("UPDATE aedata SET items=%s WHERE ID = %s",(itemData,computer_id))
+    items = json.dumps(itemData["items"])
+    energy = json.dumps(itemData["energy"])
+    cpus = json.dumps(itemData["cpus"])
+    database.execute_command_multiple_parameters("UPDATE aedata SET items=%s WHERE ID = %s",(items,computer_id))
     database.execute_command_multiple_parameters("UPDATE aedata SET energy=%s WHERE ID = %s",(energy,computer_id))
     database.execute_command_multiple_parameters("UPDATE aedata SET cpus=%s WHERE ID = %s",(cpus,computer_id))
     database.execute_command("UPDATE aedata SET updaterequested = False WHERE id = %s",computer_id)
@@ -291,7 +229,7 @@ def accountCreation():
     accountData = accountData.decode('utf-8', 'ignore')
     accountData = accountData.split(";")
     database.execute_command_multiple_parameters("INSERT INTO accounts VALUES (%s,%s,%s)", (accountData[1],accountData[2],int(accountData[0])))
-    database.execute_command_multiple_parameters("INSERT INTO aedata VALUES (%s,%s,%s,%s,%s)", (int(accountData[0]),"","",False,'EMPTY;EMPTY'))
+    database.execute_command_multiple_parameters("INSERT INTO aedata VALUES (%s,%s,%s,%s,%s)", (int(accountData[0]),"","",False,'{\"itemNumber\":\"EMPTY\", \"itemName\":\"EMPTY\"}'))
     res = database.execute_command_multiple_parameters("SELECT COUNT(*) FROM accounts WHERE username=%s AND password =%s AND id =%s",(accountData[1],accountData[2],int(accountData[0])))
     if res == None or res[0][0] != 1 :
         return "Failed"
@@ -301,10 +239,12 @@ def accountCreation():
 #after form when a user request a new crafting request.  
 @app.route("/craftingRequest")
 def craftingRequest():
-    numberRequested = request.args.get("number")
-    itemRequested = request.args.get("itemName")
-    requestString = itemRequested + ";" + str(numberRequested) + ";"
-    database.execute_command_multiple_parameters("UPDATE aedata SET craftingrequeststring=%s WHERE ID = %s",(requestString,session["user_id"]))
+    craftingString = {}
+    craftingString["itemNumber"] = request.args.get("number")
+    craftingString["itemName"] = request.args.get("itemName")
+    craftingStringJson = json.dumps(craftingString)
+    print(craftingStringJson)
+    database.execute_command_multiple_parameters("UPDATE aedata SET craftingrequeststring=%s WHERE ID = %s",(craftingStringJson,session["user_id"]))
     #print(requestString)
     return redirect("/network")
 
@@ -313,9 +253,10 @@ def craftingRequest():
 def inputCraftingStatus():
     craftingStatusData = request.get_data()
     craftingStatusData = base64.b64decode(craftingStatusData)
-    craftingStatusData= craftingStatusData.decode('utf-8', 'ignore')
-    computer_id = getComputerId(craftingStatusData)
-    craftingStatusData = clearIdFromData(craftingStatusData)
+    craftingStatusData = craftingStatusData.decode('utf-8', 'ignore')
+    craftingStatusData = json.loads(craftingStatusData)
+    computer_id = craftingStatusData["computer_id"]
+    craftingStatusData = json.dumps(craftingStatusData["crafts"])
     database.execute_command_multiple_parameters("UPDATE aedata SET craftingstatus=%s WHERE ID = %s",(craftingStatusData,computer_id))
     return "OK"
 
