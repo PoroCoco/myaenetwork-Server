@@ -86,7 +86,7 @@
                       </td>
                   <td style="text-align: left;">{{aeItems[i+1]}}</td>
                   <td>
-                    {% if aeItems[i+2] == "true"%}
+                    {% if aeItems[i+2] == true %}
                     <form action="craftingRequest">
                       <input type="number" name="number" placeholder="Request x amount" min="1" max="999999999"/>
                       <input type="hidden" name="itemName" value="{{aeItems[i]}}" />
@@ -108,17 +108,17 @@
   <table id="CraftingRequest" style="width:100%;" >
     <th>Item Name</th>
     <th>Item Count</th>
-    <th>Status <br> (Canceled = Missing resources OR Cpus already occupied OR too complex for current Cpus</br></th>
-    {%for i in range (craftingStatusData|count)%}
+    <th>Status <br> (Canceled = Missing resources OR Cpus already occupied OR too complex for current Cpus)</br></th>
+    {%for i in range (0,craftingStatusData|count,3)%}
         <tr>
             <td style="text-align: left;">
-              {{craftingStatusData[i][0]}}
+              {{craftingStatusData[i]}}
             </td>
             <td style="text-align: left;">
-              {{craftingStatusData[i][1]}}
+              {{craftingStatusData[i+1]}}
             </td>
             <td>
-              {{craftingStatusData[i][2]}}
+              {{craftingStatusData[i+2]}}
             </td>
         </tr>
 
