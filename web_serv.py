@@ -23,9 +23,6 @@ except FileNotFoundError:
 tcp_server = threading.Thread(target=tcp_serv.tcp_server_launcher, name="Tcp Server", args=(TCP_SERVER_IP, TCP_SERVER_PORT))
 tcp_server.start()
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = FLASK_KEY
-
 adminMessage = ""
 
 def process_item(itemData):
@@ -73,59 +70,64 @@ def process_energy(energy):
         energy.append(0)
     return energy
 
-@app.route("/network")
-def network():
-    networkMessage = ""
-    try: #tries to see if the user id for the session exist, if it doesn't sends back the user to the login form
-        type(session["user_id"])
-    except:
-        return render_template("loginForm.html", message = "needLogin")
-    
-    time_start = time.time()
-    data = tcp_serv.get_update_user(session["user_id"], poroNet.flags["update"]["ALL"])
-    itemData, energy, cpus, craftingStatusData = data.split("|")
-    itemData = process_item(itemData)
-    energy = process_energy(energy)
-    cpus = process_cpus(cpus)
-    craftingStatusData = process_crafts_status(craftingStatusData)
-    time_end = time.time()
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = FLASK_KEY
+    @app.route("/network")
+    def network():
+        networkMessage = ""
+        try: #tries to see if the user id for the session exist, if it doesn't sends back the user to the login form
+            type(session["user_id"])
+        except:
+            return render_template("loginForm.html", message = "needLogin")
+        
+        time_start = time.time()
+        data = tcp_serv.get_update_user(session["user_id"], poroNet.flags["update"]["ALL"])
+        itemData, energy, cpus, craftingStatusData = data.split("|")
+        itemData = process_item(itemData)
+        energy = process_energy(energy)
+        cpus = process_cpus(cpus)
+        craftingStatusData = process_crafts_status(craftingStatusData)
+        time_end = time.time()
 
-    print("Retrived OC data took : " + str(time_end-time_start))
+        print("Retrived OC data took : " + str(time_end-time_start))
 
-    if energy[3] == 0:
-        networkMessage = "Network is out of energy"
+        if energy[3] == 0:
+            networkMessage = "Network is out of energy"
 
-    return render_template("mainScreen.html",
-                        aeItems = itemData, 
-                        craftingStatusData = craftingStatusData,
-                        energy = energy,
-                        cpus = cpus,
-                        networkMessage = networkMessage,
-                        adminMessage = adminMessage)
+        return render_template("mainScreen.html",
+                            aeItems = itemData, 
+                            craftingStatusData = craftingStatusData,
+                            energy = energy,
+                            cpus = cpus,
+                            networkMessage = networkMessage,
+                            adminMessage = adminMessage)
 
-@app.route("/loginCheck",methods = ['GET', 'POST'])
-def loginCheck():
-    username = request.form["username"]
-    password = request.form["password"]
-    if database.check_user(username, password):
-        session["user_id"] = database.get_user_id(username)
-        session["craftingRequestString"] = "EMPTY;EMPTY"
-        # print("session id is : "+ session["user_id"]) 
-        if session["user_id"] == str(0):
-            return render_template("loginForm.html", message = "idFailed")
+    @app.route("/loginCheck",methods = ['GET', 'POST'])
+    def loginCheck():
+        username = request.form["username"]
+        password = request.form["password"]
+        if database.check_user(username, password):
+            session["user_id"] = database.get_user_id(username)
+            session["craftingRequestString"] = "EMPTY;EMPTY"
+            # print("session id is : "+ session["user_id"]) 
+            if session["user_id"] == str(0):
+                return render_template("loginForm.html", message = "idFailed")
+            return redirect("/network")
+        else:
+            return render_template("loginForm.html", message = "loginFailed")
+
+    #after form when a user request a new crafting request.  
+    @app.route("/craftingRequest")
+    def craftingRequest():
+        numberRequested = request.args.get("number")
+        itemRequested = request.args.get("itemName")
+        tcp_serv.send_craft_request(session["user_id"], itemRequested, numberRequested)
+
         return redirect("/network")
-    else:
-        return render_template("loginForm.html", message = "loginFailed")
 
-#after form when a user request a new crafting request.  
-@app.route("/craftingRequest")
-def craftingRequest():
-    numberRequested = request.args.get("number")
-    itemRequested = request.args.get("itemName")
-    tcp_serv.send_craft_request(session["user_id"], itemRequested, numberRequested)
-
-    return redirect("/network")
-
-@app.route("/")
-def login():
-    return render_template("loginForm.html")
+    @app.route("/")
+    def login():
+        return render_template("loginForm.html")
+    
+    return app
