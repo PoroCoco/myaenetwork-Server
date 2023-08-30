@@ -42,7 +42,6 @@ def register_socket(socket, packet_len):
     data = socket.recv(packet_len)
     data = data.decode("utf-8")
     user_id, user_version = data.split(";")
-    print(user_version, current_version)
     if (user_version != current_version):
         socket.sendall(b'1')
         socket.close()

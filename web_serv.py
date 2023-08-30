@@ -3,12 +3,29 @@ from flask import request, render_template, redirect
 from flask.globals import session
 import time
 import math
+import threading
+import json
 
 import tcp_serv
 import poroNet
 import database
 
+try:
+    with open("config.json", "r") as config_file:
+        config = json.load(config_file)
+        TCP_SERVER_IP = config.get("TCP_SERVER_IP")
+        TCP_SERVER_PORT = config.get("TCP_SERVER_PORT")
+        FLASK_KEY = config.get("FLASK_KEY")
+except FileNotFoundError:
+    print("Error: Flask secret key not found in config file.")
+    exit(1)
+
+tcp_server = threading.Thread(target=tcp_serv.tcp_server_launcher, name="Tcp Server", args=(TCP_SERVER_IP, TCP_SERVER_PORT))
+tcp_server.start()
+
 app = Flask(__name__)
+app.config['SECRET_KEY'] = FLASK_KEY
+
 adminMessage = ""
 
 def process_item(itemData):
