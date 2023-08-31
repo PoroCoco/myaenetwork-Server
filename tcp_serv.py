@@ -10,6 +10,15 @@ current_version = "0.1"
 
 all_sockets = {}
 
+def recvall(socket, len):
+    sleep(0.2)
+    data = b""
+    MTU = 1024
+    while len > 0:
+        data += socket.recv(MTU)
+        len -= MTU
+    return data.decode("utf-8")
+
 def get_user_socket(user_id):
     return all_sockets[user_id]
 
@@ -22,8 +31,7 @@ def get_update_user(user_id, flag):
         print("Received back wrong packet after asking client for update")
         return None
 
-    update_data = client_socket.recv(packet_len)
-    update_data = update_data.decode("utf-8")
+    update_data = recvall(client_socket, packet_len) 
     # print(update_data)
     return update_data
     
