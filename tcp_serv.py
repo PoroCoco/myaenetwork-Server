@@ -11,19 +11,24 @@ current_version = "0.1"
 all_sockets = {}
 
 def recvall(socket, len):
-    sleep(0.2)
     data = b""
     MTU = 1024
     while len > 0:
         data += socket.recv(MTU)
         len -= MTU
+        sleep(0.1) # Sleeping to make sure that the next pack of data was sent from the computer (duct tape fix)
     return data.decode("utf-8")
 
 def get_user_socket(user_id):
-    return all_sockets[user_id]
+    try : 
+        return all_sockets[user_id]
+    except :
+        return None
 
 def get_update_user(user_id, flag):
     client_socket = get_user_socket(user_id)
+    if (client_socket == None):
+        return None
     client_socket.send(poroNet.create_header(poroNet.packet_types["update"], 0, flag))
     packet_header = client_socket.recv(6)
     packet_type, packet_len, packet_flag = poroNet.unpack_header(packet_header)

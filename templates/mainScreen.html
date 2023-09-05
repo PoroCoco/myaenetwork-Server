@@ -175,16 +175,25 @@
     var txtTick = document.getElementById('energyTick');
     var txtStored = document.getElementById('energyStored');
     var txtStoredMax = document.getElementById('energyStoredMax');
+
+
+    // If energy array is given, use Jinja templating to access the energy array
+    var energy0 = '{{ energy[0] }}';
+    var energy1 = '{{ energy[1] }}';
+    var energy2 = '{{ energy[2] }}';
+    
+
+    
     if (btn.value === 'EU') {
       btn.value = 'RF';
-      txtTick.textContent = '{{(energy[0]/2)}} EU/t';
-      txtStored.textContent = '{{energy[2]/2}} EU';
-      txtStoredMax.textContent = '{{energy[1]/2}} EU';
+      txtTick.textContent = (energy0 / 2) + ' EU/t';
+      txtStored.textContent = (energy2 / 2) + ' EU';
+      txtStoredMax.textContent = (energy1 / 2) + ' EU';
     } else {
       btn.value = 'EU';
-      txtTick.textContent = '{{(energy[0]/2)* 4}} RF/t';
-      txtStored.textContent = '{{(energy[2]/2)* 4}} RF';
-      txtStoredMax.textContent = '{{(energy[1]/2)* 4}} RF';
+      txtTick.textContent = (energy0 / 2) * 4 + ' RF/t';
+      txtStored.textContent = (energy2 / 2) * 4 + ' RF';
+      txtStoredMax.textContent = (energy1 / 2) * 4 + ' RF';
     }
   }
 

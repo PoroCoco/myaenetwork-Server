@@ -24,6 +24,7 @@ tcp_server = threading.Thread(target=tcp_serv.tcp_server_launcher, name="Tcp Ser
 tcp_server.start()
 
 adminMessage = ""
+errorMessageNoComputerConnected = "No computer connected to your account ! Make sure that your computer is chunk loaded and running. Rebooting the computer program will create a new connection that should fix this issue."
 
 def process_item(itemData):
     itemData = itemData.split(";")
@@ -83,6 +84,8 @@ def create_app():
         
         time_start = time.time()
         data = tcp_serv.get_update_user(session["user_id"], poroNet.flags["update"]["ALL"])
+        if (data == None):
+            return render_template("mainScreen.html", networkMessage = errorMessageNoComputerConnected, energy = [0,0,0])
         itemData, energy, cpus, craftingStatusData = data.split("|")
         itemData = process_item(itemData)
         energy = process_energy(energy)
@@ -131,3 +134,8 @@ def create_app():
         return render_template("loginForm.html")
     
     return app
+
+# For testing purpose when not running with gunicorn or similiar
+if __name__ == "__main__":
+    app = create_app()
+    app.run()

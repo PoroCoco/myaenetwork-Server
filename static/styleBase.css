@@ -116,6 +116,8 @@ body {
     text-align: center;
   }
   .networkMessage{
+    max-width: 60%;
+    margin: 0 auto;
     color:red;
     font-size: xx-large;
   }
