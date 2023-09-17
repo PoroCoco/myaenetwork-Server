@@ -31,10 +31,16 @@ def process_item(itemData):
     itemData.pop(-1)
     processed_item = []
     for item in itemData:
-        item = item.split("~")
-        processed_item.append(item[0]) # name
-        processed_item.append(int(item[1])) # count
-        processed_item.append(item[2] == "true") # isCraftable
+        try :
+            item = item.split("~")
+            item_name = item[0] # name
+            item_count = int(item[1]) # count
+            item_craftable = item[2] == "true" # isCraftable
+            processed_item.append(item_name)
+            processed_item.append(item_count)
+            processed_item.append(item_craftable)
+        except:
+            continue
     return processed_item
 
 def process_crafts_status(crafts):
