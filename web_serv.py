@@ -52,11 +52,16 @@ def process_crafts_status(crafts):
     processed_crafts = []
 
     for craft in crafts:
-        craft = craft.split("~")
-        processed_crafts.append(craft[0]) # name
-        processed_crafts.append(int(craft[1])) # count
-        processed_crafts.append(craft[2]) # Status
-
+        try :
+            craft = craft.split("~")
+            craft_name = craft[0]
+            craft_count = int(craft[1])
+            craft_status = craft[2]
+            processed_crafts.append(craft_name)
+            processed_crafts.append(craft_count)
+            processed_crafts.append(craft_status)
+        except:
+            continue
     return processed_crafts
 
 def process_cpus(cpus):
