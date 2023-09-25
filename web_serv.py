@@ -34,7 +34,7 @@ def process_item(itemData):
         try :
             item = item.split("~")
             item_name = item[0] # name
-            item_count = int(item[1]) # count
+            item_count = int(float(item[1])) # count
             item_craftable = item[2] == "true" # isCraftable
             processed_item.append(item_name)
             processed_item.append(item_count)
@@ -55,7 +55,7 @@ def process_crafts_status(crafts):
         try :
             craft = craft.split("~")
             craft_name = craft[0]
-            craft_count = int(craft[1])
+            craft_count = int(float(craft[1]))
             craft_status = craft[2]
             processed_crafts.append(craft_name)
             processed_crafts.append(craft_count)
