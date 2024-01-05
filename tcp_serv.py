@@ -6,8 +6,6 @@ import database
 
 current_version = "0.1"
 
-# Ping database every 24hour
-
 all_sockets = {}
 
 def recvall(socket, len):

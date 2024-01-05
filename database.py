@@ -1,5 +1,7 @@
 import oracledb
 import json
+import threading
+from time import sleep
 
 # Load database credentials
 try:
@@ -10,6 +12,8 @@ try:
 except FileNotFoundError:
     print("Error: Database credentials not found in config file.")
     exit(1)
+
+
 
 def database_execute(commandSQL, parameters = (), fetch="one"):
     with oracledb.connect(user=DB_USERNAME, password=DB_PASSWORD, host="adb.eu-marseille-1.oraclecloud.com", dsn="(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-marseille-1.oraclecloud.com))(connect_data=(service_name=gff35b25ac52c7a_ggcbkdqvcse0dvpd_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))") as connection:
@@ -46,8 +50,21 @@ def check_user(username, password):
     return count == 1
 
 def get_user_id(username):
-    id = database_execute("SELECT user_id FROM users WHERE user_name=:username",[username])[0]
-    return id
+    try : 
+        id = database_execute("SELECT user_id FROM users WHERE user_name=:username",[username])[0]
+        return id
+    except:
+        return None
+
+
+# Ping database every 12 hours to keep it awake
+def ping_database():
+    while True:
+        get_user_id("123")
+        sleep(12*3600)
+
+pinger = threading.Thread(target=ping_database)
+pinger.start()
 
 # database_execute("CREATE TABLE users (user_name VARCHAR(64) NOT NULL UNIQUE, user_password VARCHAR(64) NOT NULL, user_id VARCHAR(64) PRIMARY KEY )", [])
 # database_execute("DROP TABLE Users", [])
